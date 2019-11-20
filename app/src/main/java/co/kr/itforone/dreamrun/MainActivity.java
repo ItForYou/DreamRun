@@ -31,6 +31,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -41,6 +42,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -49,6 +52,8 @@ import java.lang.reflect.Method;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
+import jp.wasabeef.glide.transformations.CropCircleWithBorderTransformation;
 import util.BackPressCloseHandler;
 import util.Common;
 
@@ -59,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     public WebView webView;
     @BindView(R.id.webLayout)
     public SwipeRefreshLayout webLayout;
+    @BindView(R.id.progressImgView)
+    ImageView progressImgView;
+    @BindView(R.id.loadingLayout)
+    LinearLayout loadingLayout;
 
     Button replayBtn;
 
@@ -129,6 +138,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        Glide.with(getApplicationContext())
+                .load(R.raw.progress)
+                .override(100, 100)
+                .apply(RequestOptions.circleCropTransform())
+                .into(progressImgView);
         //mHandler.sendEmptyMessage(0);
         mContext=this;
         mActivity=this;
@@ -448,6 +463,9 @@ public class MainActivity extends AppCompatActivity {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                     startActivity(intent);
                     return true;
+                }else{
+                    loadingLayout.setVisibility(View.VISIBLE);
+                    return false;
                 }
                 /*
                 if(LocationPosition.lng!=0.0){
@@ -470,6 +488,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                 Log.d("url",url);
+                loadingLayout.setVisibility(View.GONE);
                 /* cookie */
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                     CookieSyncManager.getInstance().sync();
@@ -645,6 +664,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+                loadingLayout.setVisibility(View.VISIBLE);
                 CropImage.ActivityResult result = CropImage.getActivityResult(data);
                 if (resultCode == RESULT_OK) {
                     Uri resultUri = result.getUri();
@@ -686,9 +706,11 @@ public class MainActivity extends AppCompatActivity {
 
         @JavascriptInterface
         public void getLocation(){
+        }
 
-
-
+        @JavascriptInterface
+        public void setLoadingHide(){
+            loadingLayout.setVisibility(View.GONE);
         }
     }
 
